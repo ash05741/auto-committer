@@ -1,11 +1,15 @@
+import os from 'node:os';
+import path from 'node:path';
 import { GoogleGenAI, Type, Schema } from '@google/genai';
 import * as dotenv from 'dotenv';
 
-dotenv.config();
+// Force it to look in your home directory for the key (e.g., C:\Users\ASMIT\.autocommitter)
+const configPath = path.join(os.homedir(), '.autocommitter');
+dotenv.config({ path: configPath });
 
 const apiKey = process.env.GEMINI_API_KEY;
 if (!apiKey) {
-    console.error("CRITICAL: GEMINI_API_KEY is not set in the .env file.");
+    console.error("CRITICAL: GEMINI_API_KEY is not set in the global .autocommitter file.");
     process.exit(1);
 }
 
