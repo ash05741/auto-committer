@@ -4,7 +4,7 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "agent": "./dist/index.js"
+    "ac": "./run.js"
   },
   "scripts": {
     "dev": "tsx src/index.ts",
