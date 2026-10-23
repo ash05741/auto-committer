@@ -23,6 +23,7 @@ async function main() {
         s.message('Extracting git diff (including untracked files)');
         const diff = await getWorkspaceDiff();
 
+        //something too commit 
 
         s.message('AI is analyzing changes and grouping commits');
         const commitGroups = await generateCommitGroups(diff);
