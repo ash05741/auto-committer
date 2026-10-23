@@ -59,16 +59,15 @@ export async function generateCommitGroups(diff: string): Promise<CommitGroup[]>
 
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3.8-flash', // <-- Update this line
             contents: `Here is the current git diff:\n\n${diff}`,
             config: {
                 systemInstruction,
                 responseMimeType: 'application/json',
                 responseSchema: responseSchema,
-                temperature: 0.1, // Keep it deterministic for code operations
+                temperature: 0.1,
             }
         });
-
         const textOutput = response.text;
         if (!textOutput) {
             throw new Error("Gemini returned an empty response.");
