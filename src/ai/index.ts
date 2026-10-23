@@ -45,7 +45,7 @@ export async function generateCommitGroups(diff: string, maxRetries = 3): Promis
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             const response = await ai.models.generateContent({
-                model: 'gemini-3.8-flash',
+                model: 'gemini-flash-lite-latest',
                 contents: `Here is the current git diff:\n\n${diff}`,
                 config: {
                     systemInstruction,
