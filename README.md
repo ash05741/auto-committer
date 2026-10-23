@@ -8,6 +8,7 @@ A lightning-fast, AI-powered CLI tool that analyzes your uncommitted git changes
 - **🧠 Intelligent Grouping**: Reads your entire workspace diff and groups unrelated changes (e.g., bug fixes vs. feature additions) into separate, atomic commits.
 - **🛡️ Bulletproof Networking**: Built-in IPv4 DNS forcing to bypass the notorious Node.js IPv6 hanging bug on strict ISPs.
 - **💅 Beautiful UI**: Interactive, terminal-native prompts powered by `@clack/prompts` to review, confirm, and push your code.
+- **🌍 Global Execution**: Run it from any folder on your machine using a single, two-letter command.
 
 ## 🛠️ Tech Stack
 
@@ -19,29 +20,39 @@ A lightning-fast, AI-powered CLI tool that analyzes your uncommitted git changes
 ## ⚙️ Setup & Installation
 
 1. **Clone the repository:**
-   \`\`\`bash
+   ```bash
    git clone <your-repo-url>
    cd auto-committer
-   \`\`\`
+   ```
 
 2. **Install dependencies:**
-   \`\`\`bash
+   ```bash
    npm install
-   \`\`\`
+   ```
 
-3. **Configure your environment:**
-   Create a `.env` file in the root directory and add your Google Gemini API key:
-   \`\`\`env
+3. **Configure your global API Key:**
+   To use this tool across all your projects, it looks for your API key in your system's home folder. 
+   Create a file named `.autocommitter` in your user home directory (e.g., `~/.autocommitter` on Mac/Linux or `C:\Users\YourName\.autocommitter` on Windows) and add your key:
+   ```env
    GEMINI_API_KEY=your_api_key_here
-   \`\`\`
+   ```
+
+4. **Link the CLI globally:**
+   Inside the `auto-committer` project folder, run:
+   ```bash
+   npm link
+   ```
+   *This registers the `ac` command to your system.*
 
 ## 🚀 Usage
 
-Run the CLI tool from your project directory whenever you have uncommitted changes:
+Because the tool is linked globally, you do not need to be inside the `auto-committer` folder to use it. 
 
-\`\`\`bash
-npm run dev
-\`\`\`
+Open **any** Git repository on your computer that has uncommitted changes and simply type:
+
+```bash
+ac
+```
 
 **What to expect:**
 1. The agent extracts your git diff (including untracked files).
