@@ -5,12 +5,12 @@ import { hasUncommittedChanges, getWorkspaceDiff, commitFiles, pushChanges } fro
 import { generateCommitGroups } from './ai/index.js';
 
 async function main() {
-    // 1. Start the CLI UI
+
     intro('🚀 Auto-Committer Agent');
     const s = spinner();
 
     try {
-        // 2. Check for changes
+
         s.start('Checking workspace for changes');
         const hasChanges = await hasUncommittedChanges();
         if (!hasChanges) {
@@ -19,11 +19,11 @@ async function main() {
             process.exit(0);
         }
 
-        // 3. Extract diff
+
         s.message('Extracting git diff (including untracked files)');
         const diff = await getWorkspaceDiff();
 
-        // 4. Send to Gemini
+
         s.message('AI is analyzing changes and grouping commits');
         const commitGroups = await generateCommitGroups(diff);
         s.stop('Analysis complete.');
@@ -33,7 +33,7 @@ async function main() {
             process.exit(0);
         }
 
-        // 5. Display proposed commits for human review
+
         let summary = '';
         commitGroups.forEach((group, index) => {
             summary += `\n[Commit ${index + 1}]: ${group.commit_message}\n`;
@@ -44,7 +44,7 @@ async function main() {
 
         note(summary, 'Proposed Commits');
 
-        // 6. Ask for confirmation
+
         const shouldCommit = await confirm({
             message: 'Do you want to proceed with these commits?',
             initialValue: true,
@@ -55,7 +55,7 @@ async function main() {
             process.exit(0);
         }
 
-        // 7. Execute Git commits
+
         s.start('Executing commits');
         for (const group of commitGroups) {
             s.message(`Committing: ${group.commit_message}`);
@@ -63,7 +63,6 @@ async function main() {
         }
         s.stop('All groups committed successfully.');
 
-        // 8. Optional Auto-Push
         const shouldPush = await confirm({
             message: 'Do you want to push to origin?',
             initialValue: true,
