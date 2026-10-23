@@ -41,7 +41,6 @@ export async function generateCommitGroups(diff: string, maxRetries = 3): Promis
         },
     };
 
-    // Implement automatic retry for 503 errors
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             const response = await ai.models.generateContent({
