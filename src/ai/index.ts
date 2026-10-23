@@ -9,76 +9,69 @@ if (!apiKey) {
     process.exit(1);
 }
 
-// Initialize the new Google Gen AI SDK
 const ai = new GoogleGenAI({ apiKey });
 
-// Define the precise structure we need back from the model
 export interface CommitGroup {
     files: string[];
     commit_message: string;
 }
 
-/**
- * Sends the raw git diff to Gemini and requests logically grouped commits.
- * Uses structured outputs (responseSchema) to guarantee a JSON array response.
- */
-export async function generateCommitGroups(diff: string): Promise<CommitGroup[]> {
+export async function generateCommitGroups(diff: string, maxRetries = 3): Promise<CommitGroup[]> {
     const systemInstruction = `
     You are an expert developer agent analyzing a git diff.
     Your task is to review the uncommitted changes and logically group them into separate, atomic commits.
     
     Rules:
     1. Every file in the diff MUST be included in exactly one group.
-    2. Group files by logical feature, bug fix, or architectural change. (e.g. database schema changes go together, UI updates go together).
-    3. Generate a strict Conventional Commit message (e.g., "feat:", "fix:", "chore:") for each group.
-    4. Only output the requested JSON structure. Do not add markdown formatting or explanations.
+    2. Group files by logical feature, bug fix, or architectural change.
+    3. Generate a strict Conventional Commit message for each group.
+    4. Only output the requested JSON structure. Do not add markdown formatting.
   `;
 
-    // Define the JSON schema to enforce the structure of the output
     const responseSchema: Schema = {
         type: Type.ARRAY,
         description: "An array of logical commit groups",
         items: {
             type: Type.OBJECT,
             properties: {
-                files: {
-                    type: Type.ARRAY,
-                    description: "List of file paths that belong to this commit",
-                    items: {
-                        type: Type.STRING,
-                    },
-                },
-                commit_message: {
-                    type: Type.STRING,
-                    description: "A conventional commit message summarizing the changes in these files",
-                },
+                files: { type: Type.ARRAY, items: { type: Type.STRING } },
+                commit_message: { type: Type.STRING },
             },
             required: ["files", "commit_message"],
         },
     };
 
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-3.8-flash', // <-- Update this line
-            contents: `Here is the current git diff:\n\n${diff}`,
-            config: {
-                systemInstruction,
-                responseMimeType: 'application/json',
-                responseSchema: responseSchema,
-                temperature: 0.1,
+    // Implement automatic retry for 503 errors
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const response = await ai.models.generateContent({
+                model: 'gemini-3.8-flash',
+                contents: `Here is the current git diff:\n\n${diff}`,
+                config: {
+                    systemInstruction,
+                    responseMimeType: 'application/json',
+                    responseSchema: responseSchema,
+                    temperature: 0.1,
+                }
+            });
+
+            const textOutput = response.text;
+            if (!textOutput) throw new Error("Gemini returned an empty response.");
+
+            return JSON.parse(textOutput);
+
+        } catch (error: any) {
+            // If it's a 503 and we have retries left, wait and try again
+            if (error.status === 503 && attempt < maxRetries) {
+                const delay = attempt * 2000; // Wait 2s, then 4s, etc.
+                console.log(`\nAPI overloaded. Retrying in ${delay / 1000}s... (Attempt ${attempt}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                continue;
             }
-        });
-        const textOutput = response.text;
-        if (!textOutput) {
-            throw new Error("Gemini returned an empty response.");
+            // If it's not a 503, or we ran out of retries, throw the error
+            throw error;
         }
-
-        // The response is guaranteed to be a JSON string matching our schema
-        const groups: CommitGroup[] = JSON.parse(textOutput);
-        return groups;
-
-    } catch (error) {
-        console.error("Failed to generate commit groups from AI:", error);
-        throw error;
     }
+
+    throw new Error("Failed to generate commit groups after maximum retries.");
 }
